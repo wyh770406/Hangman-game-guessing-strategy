@@ -1,0 +1,65 @@
+/* HangmanTest.java */
+
+import java.util.List;
+
+public class HangmanTest {
+
+        public static void main(String arg[]) {
+
+               String validWords = "words.txt"; // the file from which obtain list of valid words 
+	       int maxWrongGuesses = 5; // maximum number of wrong guesses . Defaults to 5.
+	       String wordsToScore = "score.txt"; // the file from which obtain list of words to score 	
+	       int randomSeed = 0;  // the random seed generator . Defaults to 0.	
+	       int lookAhead = 1;   // number of guesses to look ahead . Defaults to 1.	
+	       int randomTestSize = 100; // number of random words selected from valid words file for test. Defaults to 100.
+
+               List<String> lwordsToScore = FileReader.readLines(wordsToScore);
+
+	       List<char[]> lvalidWords = FileReader.readLinesAsArrays(validWords);
+	       int totalScore = 0;				
+	       //int gameNumber = 0;
+               GuessingStrategy strategy = new EntropyGuessingStrategy(lvalidWords, lookAhead);	
+
+               long startTime = Timer.startTime();
+
+		
+		for (String secretWord : lwordsToScore) {
+			//gameNumber++;
+			
+			HangmanGame game = new HangmanGame(secretWord, maxWrongGuesses);
+
+			int score = run(game,strategy);
+                        //int score = game.score2(strategy);
+			
+			System.out.printf(" secret word = %-30s score = %2d",
+					secretWord,
+					score);
+			System.out.println();
+
+			totalScore += score;
+		}
+		System.out.println();
+		System.out.printf("total score = %5d", totalScore);
+		System.out.println();
+	
+	    System.out.printf("scoring " + Timer.elapsedTime(startTime));
+	    System.out.println();
+
+       }
+
+       public static int run(HangmanGame game, GuessingStrategy strategy) {
+
+	  char rightMostVowel = StringOps.rightMostVowel(game.getSecretWord());
+	  Guess firstGuess = new GuessLetter(rightMostVowel);
+	  firstGuess.makeGuess(game);
+	  
+	  while (game.gameStatus() == HangmanGame.Status.KEEP_GUESSING) {
+		  Guess guess = strategy.nextGuess(game);
+		  guess.makeGuess(game);
+	  }
+
+          return game.score();
+       }
+
+
+}
